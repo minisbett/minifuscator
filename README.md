@@ -1,1 +1,1 @@
-<center><img width=1250 height=130 src="https://raw.githubusercontent.com/minisbett/minifuscator/master/.github/assets/logo.png" /></center>
+<center><img width=1850 height=135 src="https://raw.githubusercontent.com/minisbett/minifuscator/master/.github/assets/logo.png" /></center>
