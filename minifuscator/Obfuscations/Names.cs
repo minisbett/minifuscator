@@ -26,7 +26,6 @@ internal class Names : ObfuscationBase
     ArgumentNullException.ThrowIfNull(Settings.NameObfuscation.Length, nameof(Settings.NameObfuscation.Length));
     ArgumentNullException.ThrowIfNull(Settings.NameObfuscation.CharSet, nameof(Settings.NameObfuscation.CharSet));
 
-    // Ignore if name obfuscation is disabled.
     if (!Settings.NameObfuscation.Enabled)
       return;
 

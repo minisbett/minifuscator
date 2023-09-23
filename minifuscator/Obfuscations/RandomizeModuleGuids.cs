@@ -1,7 +1,7 @@
 ﻿namespace minifuscator.Obfuscations;
 
 /// <summary>
-/// Applies miscellaneous obfuscations to the assembly.
+/// Applies randomization of the module GUIDs (Mvid, EncId and EncBaseId) to the assembly.
 /// </summary>
 internal class Miscellaneous : ObfuscationBase
 {
@@ -9,15 +9,9 @@ internal class Miscellaneous : ObfuscationBase
 
   public override void Execute()
   {
-    if (Settings.Miscellaneous.RandomizeModuleGUIDs)
-      RandomizeModuleGUIDs();
-  }
+    if (!Settings.RandomizeModuleGUIDs)
+      return;
 
-  /// <summary>
-  /// Replaces the Mvid, EncId and EncBaseId with new random GUIDs.
-  /// </summary>
-  private void RandomizeModuleGUIDs()
-  {
     Module.Mvid = Guid.NewGuid();
     Module.EncId = Guid.NewGuid();
     Module.EncBaseId = Guid.NewGuid();
@@ -26,5 +20,12 @@ internal class Miscellaneous : ObfuscationBase
     Logger.Info("MiscObf", $"EncId: {Module.EncId}");
     Logger.Info("MiscObf", $"EncBaseId: {Module.EncBaseId}");
     Logger.Success("MiscObf", "Randomized module GUIDs.");
+  }
+
+  /// <summary>
+  /// Replaces the Mvid, EncId and EncBaseId with new random GUIDs.
+  /// </summary>
+  private void RandomizeModuleGUIDs()
+  {
   }
 }

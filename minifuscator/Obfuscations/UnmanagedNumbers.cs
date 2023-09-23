@@ -13,7 +13,6 @@ internal class UnmanagedNumbers : ObfuscationBase
   {
     ArgumentNullException.ThrowIfNull(Settings.NumberObfuscation, nameof(Settings.NumberObfuscation));
 
-    // Ignore if number obfuscation is disabled.
     if (!Settings.NumberObfuscation.Enabled)
       return;
 

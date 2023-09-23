@@ -24,7 +24,7 @@ public static class Minifuscator
   {
     if (!DisableLogging)
     {
-      Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version!;
+      Version version = SRAssembly.GetExecutingAssembly().GetName().Version!;
       Console.WriteLine($"Minifuscator v{version.Major}.{version.Minor}.{version.Build}");
     }
 

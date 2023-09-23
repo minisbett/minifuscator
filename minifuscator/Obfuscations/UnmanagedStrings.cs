@@ -17,7 +17,6 @@ internal class UnmanagedStrings : ObfuscationBase
   {
     ArgumentNullException.ThrowIfNull(Settings.StringObfuscation, nameof(Settings.StringObfuscation));
 
-    // Ignore if string obfuscation is disabled.
     if (!Settings.StringObfuscation.Enabled)
       return;
 

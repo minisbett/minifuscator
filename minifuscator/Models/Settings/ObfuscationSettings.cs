@@ -21,7 +21,7 @@ public class ObfuscationSettings
   public NumberObfuscationSettings NumberObfuscation { get; set; } = new NumberObfuscationSettings();
 
   /// <summary>
-  /// Settings for miscellaneous obfuscations.
+  /// Bool whether the module GUIDs (MVID, EncId and EncBaseId) should be randomized.
   /// </summary>
-  public MiscellaneousSettings Miscellaneous { get; set; } = new MiscellaneousSettings();
+  public bool RandomizeModuleGUIDs { get; set; } = false;
 }

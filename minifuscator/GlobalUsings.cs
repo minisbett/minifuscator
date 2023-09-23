@@ -7,5 +7,6 @@ global using Module = AsmResolver.DotNet.ModuleDefinition;
 global using Parameter = AsmResolver.DotNet.ParameterDefinition;
 global using Property = AsmResolver.DotNet.PropertyDefinition;
 global using Type = AsmResolver.DotNet.TypeDefinition;
+global using SRAssembly = System.Reflection.Assembly;
 global using SRModule = System.Reflection.Module;
 global using SType = System.Type;
