@@ -1,5 +1,5 @@
 <div align="center">
-<img width=1850 height=80 src="https://raw.githubusercontent.com/minisbett/minifuscator/master/.github/assets/logo.png" />
+<img width=1850 height=75 src="https://raw.githubusercontent.com/minisbett/minifuscator/master/.github/assets/logo.png" />
 
 #
 An open-source .NET obfuscation tool, fully documented and comprehensible.
