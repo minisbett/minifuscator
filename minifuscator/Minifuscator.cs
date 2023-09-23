@@ -1,7 +1,7 @@
 ﻿using AsmResolver;
 using AsmResolver.DotNet.Bundles;
 using minifuscator.Models;
-using minifuscator.Modules;
+using minifuscator.Obfuscations;
 using minifuscator.Utils;
 
 namespace minifuscator;
