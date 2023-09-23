@@ -12,7 +12,7 @@ For more info, refer to the [credits section](#credits) of this README.
 </div>
 
 <div align="center">
-<i>Made with ❤️ by Project Minipad</i>
+<i>Made with ❤️ by minisbett</i>
 </div>
 
 # Features
