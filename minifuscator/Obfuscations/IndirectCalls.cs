@@ -1,10 +1,11 @@
-﻿using AsmResolver.DotNet.Code.Cil;
-using AsmResolver.DotNet;
-using AsmResolver.PE.DotNet.Cil;
-using System.Reflection;
+﻿using AsmResolver.DotNet;
+using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures.Types;
+using AsmResolver.PE.DotNet.Cil;
+using minifuscator.Utils;
+using System.Reflection;
 
-namespace minifuscator.Modules;
+namespace minifuscator.Obfuscations;
 
 /// <summary>
 /// Applies obfuscation of all kinds of method calls to the assembly.
@@ -22,17 +23,17 @@ internal class IndirectCalls : ObfuscationBase
     // Import Type.GetTypeFromHandle(RuntimeTypeHandle) to get the <Module> type at runtime.
     // Calling this method on the <Module> handle is the equivalent of typeof(<Module>).
     IMethodDescriptor getTypeFromHandle = Module.Import(
-      typeof(System.Type).GetMethod(nameof(System.Type.GetTypeFromHandle),
-      new System.Type[] { typeof(RuntimeTypeHandle) })!);
+      typeof(SType).GetMethod(nameof(System.Type.GetTypeFromHandle),
+      new SType[] { typeof(RuntimeTypeHandle) })!);
 
     // Import the getter of Type::Module to get the module of a type.
     IMethodDescriptor getModule = Module.Import(
-      typeof(System.Type).GetProperty(nameof(Type.Module))!.GetMethod!);
+      typeof(SType).GetProperty(nameof(Type.Module))!.GetMethod!);
 
     // Import Module::ResolveMethod(int) to get a method inside the module by it's metadata token.
     IMethodDescriptor resolveMethod = Module.Import(
-      typeof(System.Reflection.Module).GetMethod(nameof(System.Reflection.Module.ResolveMethod),
-      new System.Type[] { typeof(int) })!);
+      typeof(System.Reflection.Module).GetMethod(nameof(SRModule.ResolveMethod),
+      new SType[] { typeof(int) })!);
 
     // Import MethodBase::MethodHandle to get the handle of a method.
     IMethodDescriptor getMethodHandle = Module.Import(
@@ -69,7 +70,7 @@ internal class IndirectCalls : ObfuscationBase
 
         // If the target method has a non-value return type, skip it.
         // TODO: Find a way to support all return types consistently.
-        if(target.Signature.ReturnsValue && !target.Signature.ReturnType.IsValueType)
+        if (target.Signature.ReturnsValue && !target.Signature.ReturnType.IsValueType)
         {
           Logger.Warn("CallObf", $"Ignoring '{target.FullName}' (non-value return types are not supported yet)");
         }

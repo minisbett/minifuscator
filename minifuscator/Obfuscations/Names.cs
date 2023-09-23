@@ -1,10 +1,8 @@
 ﻿using AsmResolver;
 using AsmResolver.DotNet;
-using System;
-using System.Reflection;
-using System.Runtime.InteropServices;
+using minifuscator.Utils;
 
-namespace minifuscator.Modules;
+namespace minifuscator.Obfuscations;
 
 /// <summary>
 /// Applies obfuscation of the name identifiers of namespaces, types, methods, fields, properties, etc. to the assembly.
@@ -20,7 +18,7 @@ internal class Names : ObfuscationBase
   /// The JIT compiler depends on definitions like inherited methods or properties to have exactly the same name in
   /// both the inheriting type and the inherited type. (Example: the Execute method of the ObfuscationModule class)
   /// </summary>
-  private Dictionary<string, string> _obfuscatedNames = new Dictionary<string, string>();
+  private readonly Dictionary<string, string> _obfuscatedNames = new Dictionary<string, string>();
 
   public override void Execute()
   {

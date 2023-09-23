@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace minifuscator.Models.Settings;
+﻿namespace minifuscator.Models.Settings;
 
 /// <summary>
 /// Represents miscellaneous settings of smaller obfuscations.

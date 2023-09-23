@@ -1,4 +1,6 @@
-﻿namespace minifuscator.Models;
+﻿using minifuscator.Models.Settings;
+
+namespace minifuscator.Models;
 
 /// <summary>
 /// Represents an obfuscation job to be passed to the obfuscation engine.

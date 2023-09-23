@@ -1,4 +1,6 @@
-﻿namespace minifuscator.Modules;
+﻿using minifuscator.Models.Settings;
+
+namespace minifuscator.Obfuscations;
 
 /// <summary>
 /// Base class for obfuscations, providing the assembly, module and settings.

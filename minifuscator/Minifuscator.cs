@@ -1,10 +1,8 @@
-﻿using AsmResolver.DotNet.Bundles;
+﻿using AsmResolver;
+using AsmResolver.DotNet.Bundles;
 using minifuscator.Models;
-using System.Reflection.Metadata;
-using System.Reflection;
-using minifuscator.Models.Settings;
-using AsmResolver;
-using System.Runtime;
+using minifuscator.Modules;
+using minifuscator.Utils;
 
 namespace minifuscator;
 

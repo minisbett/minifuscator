@@ -2,14 +2,9 @@
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.PE.DotNet;
 using AsmResolver.PE.DotNet.Cil;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using minifuscator.Utils;
 
-namespace minifuscator.Modules;
+namespace minifuscator.Obfuscations;
 
 /// <summary>
 /// Applies obfuscation of Ldstr instructions to the assembly.

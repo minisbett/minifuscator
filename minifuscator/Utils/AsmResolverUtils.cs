@@ -1,7 +1,6 @@
 ﻿using AsmResolver.DotNet;
-using AsmResolver.DotNet.Signatures.Types;
+using AsmResolver.DotNet.Bundles;
 using AsmResolver.PE.DotNet.Cil;
-using System;
 using System.Reflection;
 
 namespace minifuscator.Utils;

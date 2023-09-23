@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace minifuscator.Utils;
+﻿namespace minifuscator.Utils;
 
 /// <summary>
 /// Provides utility methods for strings.
