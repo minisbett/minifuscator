@@ -1,24 +1,24 @@
-﻿namespace minifuscator.Models.Settings;
+﻿namespace minifuscator.Protections.Settings;
 
 /// <summary>
 /// Represents the settings for the different obfuscations applied to the assembly.
 /// </summary>
-public class ObfuscationSettings
+public class ProtectionSettings
 {
   /// <summary>
   /// Settings for the name obfuscation.
   /// </summary>
-  public NameObfuscationSettings NameObfuscation { get; set; } = new NameObfuscationSettings();
+  public RenamerSettings Renamer { get; set; } = new RenamerSettings();
 
   /// <summary>
   /// Settings for the string obfuscation.
   /// </summary>
-  public StringObfuscationSettings StringObfuscation { get; set; } = new StringObfuscationSettings();
+  public UnmanagedStringsSettings UnmanagedStrings { get; set; } = new UnmanagedStringsSettings();
 
   /// <summary>
   /// Settings for the number obfuscation.
   /// </summary>
-  public NumberObfuscationSettings NumberObfuscation { get; set; } = new NumberObfuscationSettings();
+  public UnmanagedNumbersSettings UnmanagedNumbers { get; set; } = new UnmanagedNumbersSettings();
 
   /// <summary>
   /// Bool whether the module GUIDs (MVID, EncId and EncBaseId) should be randomized.

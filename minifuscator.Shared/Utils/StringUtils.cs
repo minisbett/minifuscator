@@ -1,9 +1,9 @@
-﻿namespace minifuscator.Utils;
+﻿namespace minifuscator.Shared.Utils;
 
 /// <summary>
 /// Provides utility methods for strings.
 /// </summary>
-internal static class StringUtils
+public static class StringUtils
 {
   /// <summary>
   /// Static random instance for the class.

@@ -1,13 +1,14 @@
 ﻿using AsmResolver;
 using AsmResolver.DotNet;
-using minifuscator.Utils;
+using minifuscator.Shared;
+using minifuscator.Shared.Utils;
 
-namespace minifuscator.Obfuscations;
+namespace minifuscator.Protections;
 
 /// <summary>
-/// Applies obfuscation of the name identifiers of namespaces, types, methods, fields, properties, etc. to the assembly.
+/// Applies obfuscation of the name identifiers to the assembly by replacing the names of namespaces, types, methods, fields, etc.
 /// </summary>
-internal class Names : ObfuscationBase
+public class Renamer : Protection
 {
   public override int Priority => 1;
 
@@ -20,29 +21,25 @@ internal class Names : ObfuscationBase
   /// </summary>
   private readonly Dictionary<string, string> _obfuscatedNames = new Dictionary<string, string>();
 
-  public override void Execute()
+  public override void Execute(ProtectionContext context)
   {
-    ArgumentNullException.ThrowIfNull(Settings.NameObfuscation, nameof(Settings.NameObfuscation));
-    ArgumentNullException.ThrowIfNull(Settings.NameObfuscation.Length, nameof(Settings.NameObfuscation.Length));
-    ArgumentNullException.ThrowIfNull(Settings.NameObfuscation.CharSet, nameof(Settings.NameObfuscation.CharSet));
-
-    if (!Settings.NameObfuscation.Enabled)
+    if (!context.Settings.Renamer.Enabled)
       return;
 
     // Create a list of all targetted name providers.
     List<INameProvider> providers = new List<INameProvider>();
-    if (Settings.NameObfuscation.Types)
-      providers.AddRange(Module.GetAllTypes());
-    if (Settings.NameObfuscation.Methods)
-      providers.AddRange(Module.GetAllTypes().GetAllMethods());
-    if (Settings.NameObfuscation.Parameters)
-      providers.AddRange(Module.GetAllTypes().GetAllMethods().GetAllParameters());
-    if (Settings.NameObfuscation.Properties)
-      providers.AddRange(Module.GetAllTypes().GetAllProperties());
-    if (Settings.NameObfuscation.Fields)
-      providers.AddRange(Module.GetAllTypes().GetAllFields());
-    if (Settings.NameObfuscation.Events)
-      providers.AddRange(Module.GetAllTypes().GetAllEvents());
+    if (context.Settings.Renamer.Types)
+      providers.AddRange(context.Module.GetAllTypes());
+    if (context.Settings.Renamer.Methods)
+      providers.AddRange(context.Module.GetAllTypes().GetAllMethods());
+    if (context.Settings.Renamer.Parameters)
+      providers.AddRange(context.Module.GetAllTypes().GetAllMethods().GetAllParameters());
+    if (context.Settings.Renamer.Properties)
+      providers.AddRange(context.Module.GetAllTypes().GetAllProperties());
+    if (context.Settings.Renamer.Fields)
+      providers.AddRange(context.Module.GetAllTypes().GetAllFields());
+    if (context.Settings.Renamer.Events)
+      providers.AddRange(context.Module.GetAllTypes().GetAllEvents());
 
     // Filter all name providers with null names or that are not eligible for obfuscation.
     providers = providers.Where(x => x.Name is not null).Where(IsEligibleForObfuscation).ToList();
@@ -51,16 +48,16 @@ internal class Names : ObfuscationBase
     // Apply obfuscation to all name providers.
     foreach (INameProvider provider in providers)
       provider.GetType().GetProperty("Name")!.SetValue(provider,
-            new Utf8String(GetObfuscatedName(provider.Name!)));
+            new Utf8String(GetObfuscatedName(provider.Name!, context.Settings.Renamer.Length, context.Settings.Renamer.CharSet)));
 
     // Apply namespace obfuscation to all types if enabled.
-    if (Settings.NameObfuscation.Namespaces)
-      foreach (Type type in Module.GetAllTypes().Where(x => x.Namespace is not null))
-        type.Namespace = GetObfuscatedName(type.Namespace!);
+    if (context.Settings.Renamer.Namespaces)
+      foreach (TypeDefinition type in context.Module.GetAllTypes().Where(x => x.Namespace is not null))
+        type.Namespace = GetObfuscatedName(type.Namespace!, context.Settings.Renamer.Length, context.Settings.Renamer.CharSet);
 
     // Apply module name obfuscation if enabled.
-    if (Settings.NameObfuscation.Module)
-      Module.Name = GetObfuscatedName(Module.Name!);
+    if (context.Settings.Renamer.Module)
+      context.Module.Name = GetObfuscatedName(context.Module.Name!, context.Settings.Renamer.Length, context.Settings.Renamer.CharSet);
 
     Logger.Success("NameObf", "Finished.");
   }
@@ -69,12 +66,15 @@ internal class Names : ObfuscationBase
   /// Returns the obfuscated name of the specified name. Inside the lifespan of the instance of this obfuscation,
   /// every name will always be obfuscated to the same name due to reasons mentioned in the summary of the dictionary.
   /// </summary>
+  /// <param name="name" >The name to obfuscate.</param>
+  /// <param name="length" >The length of the obfuscated name.</param>
+  /// <param name="charSet" >The character set for the randomized, obfuscated name.</param>
   /// <returns>The random string.</returns>
-  private string GetObfuscatedName(string name)
+  private string GetObfuscatedName(string name, int length, char[] charSet)
   {
     // Check whether the name has already been obfuscated. If not, generate a new random name and add it.
     if (!_obfuscatedNames.ContainsKey(name))
-      _obfuscatedNames.Add(name, StringUtils.GetRandomString(Settings.NameObfuscation.Length, Settings.NameObfuscation.CharSet));
+      _obfuscatedNames.Add(name, StringUtils.GetRandomString(length, charSet));
 
     // Return the obfuscated name.
     return _obfuscatedNames[name];
@@ -88,7 +88,7 @@ internal class Names : ObfuscationBase
   private bool IsEligibleForObfuscation(INameProvider provider)
   {
     // Exclude constructors, getters and setters.
-    if (provider is Method method)
+    if (provider is MethodDefinition method)
       return !method.IsConstructor && !method.IsGetMethod && !method.IsSetMethod;
 
     // Otherwise, return true.

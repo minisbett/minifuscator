@@ -1,26 +1,30 @@
-﻿using AsmResolver.DotNet.Code.Cil;
+﻿using AsmResolver.DotNet;
+using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.PE.DotNet;
 using AsmResolver.PE.DotNet.Cil;
-using minifuscator.Utils;
+using minifuscator.Shared;
+using minifuscator.Shared.Utils;
 
-namespace minifuscator.Obfuscations;
+namespace minifuscator.Protections;
 
-internal class UnmanagedNumbers : ObfuscationBase
+/// <summary>
+/// Applies number obfuscation to the assembly by replacing all Ldc instructions with calls to native methods.
+/// </summary>
+public class UnmanagedNumbers : Protection
 {
   public override int Priority => 0;
 
-  public override void Execute()
+  public override void Execute(ProtectionContext context)
   {
-    ArgumentNullException.ThrowIfNull(Settings.NumberObfuscation, nameof(Settings.NumberObfuscation));
-
-    if (!Settings.NumberObfuscation.Enabled)
+    if (!context.Settings.UnmanagedNumbers.Enabled)
       return;
 
     // Track the amount of obfuscated numbers to determine whether mixed-mode execution should be enabled and logging.
     int amount = 0;
 
     // Go through all methods and replace all Ldc instructions with a call to the native method.
-    foreach (Method method in Module.GetAllTypes().Where(x => !x.IsModuleType).GetAllMethods().Where(x => x.CilMethodBody is not null))
+    foreach (MethodDefinition method in context.Module.GetAllTypes().Where(x => !x.IsModuleType)
+      .GetAllMethods().Where(x => x.CilMethodBody is not null))
     {
       CilInstructionCollection instructions = method.CilMethodBody!.Instructions!;
 
@@ -38,8 +42,8 @@ internal class UnmanagedNumbers : ObfuscationBase
           instruction.ReplaceWith(CilOpCodes.Ldc_I4, Convert.ToInt32((sbyte)instruction.Operand!));
 
         // Get the native method, add it to the module type and replace the instruction with a call to it.
-        Method native = NativeUtils.GetNativeNumberMethod(instruction.Operand!, Module.CorLibTypeFactory);
-        Module.GetOrCreateModuleType().Methods.Add(native);
+        MethodDefinition native = NativeUtils.GetNativeNumberMethod(instruction.Operand!, context.Module.CorLibTypeFactory);
+        context.Module.GetOrCreateModuleType().Methods.Add(native);
         instruction.ReplaceWith(CilOpCodes.Call, native);
 
         amount++;
@@ -48,7 +52,7 @@ internal class UnmanagedNumbers : ObfuscationBase
 
     // If numbers were obfuscated, enable mixed-mode execution in the module.
     if (amount > 0)
-      Module.Attributes &= ~DotNetDirectoryFlags.ILOnly;
+      context.Module.Attributes &= ~DotNetDirectoryFlags.ILOnly;
 
     Logger.Success("NumObf", $"Obfuscated {amount} numbers.");
   }

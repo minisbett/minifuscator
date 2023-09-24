@@ -2,32 +2,32 @@
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.PE.DotNet;
 using AsmResolver.PE.DotNet.Cil;
-using minifuscator.Utils;
+using minifuscator.Shared;
+using minifuscator.Shared.Utils;
 
-namespace minifuscator.Obfuscations;
+namespace minifuscator.Protections;
 
 /// <summary>
-/// Applies obfuscation of Ldstr instructions to the assembly.
+/// Applies number obfuscation to the assembly by replacing all Ldstr instructions with calls to native methods.
 /// </summary>
-internal class UnmanagedStrings : ObfuscationBase
+public class UnmanagedStrings : Protection
 {
   public override int Priority => 0;
 
-  public override void Execute()
+  public override void Execute(ProtectionContext context)
   {
-    ArgumentNullException.ThrowIfNull(Settings.StringObfuscation, nameof(Settings.StringObfuscation));
-
-    if (!Settings.StringObfuscation.Enabled)
+    if (!context.Settings.UnmanagedStrings.Enabled)
       return;
 
     // Track the amount of obfuscated strings to determine whether mixed-mode execution should be enabled and logging.
     int amount = 0;
 
     // Import the string::.ctor(char*) constructor required for the obfuscation.
-    IMethodDescriptor charPtrCtor = Module.Import(typeof(string).GetConstructor(new[] { typeof(char*) })!);
+    IMethodDescriptor charPtrCtor = context.Module.Import(typeof(string).GetConstructor(new[] { typeof(char*) })!);
 
     // Go through all methods and replace all Ldstr instructions with a call to the deobfuscation method.
-    foreach (Method method in Module.GetAllTypes().Where(x => !x.IsModuleType).GetAllMethods().Where(x => x.CilMethodBody is not null))
+    foreach (MethodDefinition method in context.Module.GetAllTypes().Where(x => !x.IsModuleType)
+      .GetAllMethods().Where(x => x.CilMethodBody is not null))
     {
       CilInstructionCollection instructions = method.CilMethodBody!.Instructions!;
 
@@ -43,8 +43,8 @@ internal class UnmanagedStrings : ObfuscationBase
           continue;
 
         // Get the native method for the string, add it to the module and replace the instruction with a call to it.
-        Method native = NativeUtils.GetNativeStringMethod($"{instruction.Operand}\0", Module.CorLibTypeFactory);
-        Module.GetOrCreateModuleType().Methods.Add(native);
+        MethodDefinition native = NativeUtils.GetNativeStringMethod($"{instruction.Operand}\0", context.Module.CorLibTypeFactory);
+        context.Module.GetOrCreateModuleType().Methods.Add(native);
         instruction.ReplaceWith(CilOpCodes.Call, native);
 
         // Call the string::.ctor(char*) constructor to turn the char* loaded onto the stack into a string.
@@ -56,7 +56,7 @@ internal class UnmanagedStrings : ObfuscationBase
 
     // If strings were obfuscated, enable mixed-mode execution in the module.
     if (amount > 0)
-      Module.Attributes &= ~DotNetDirectoryFlags.ILOnly;
+      context.Module.Attributes &= ~DotNetDirectoryFlags.ILOnly;
 
     Logger.Success("StrObf", $"Obfuscated {amount} strings.");
   }

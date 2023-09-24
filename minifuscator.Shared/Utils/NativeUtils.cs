@@ -5,20 +5,20 @@ using AsmResolver.DotNet.Signatures.Types;
 using AsmResolver.PE.DotNet.Metadata.Tables.Rows;
 using System.Text;
 
-namespace minifuscator.Utils;
+namespace minifuscator.Shared.Utils;
 
 /// <summary>
 /// Provides utility methods for native methods.
 /// </summary>
-internal static class NativeUtils
+public static class NativeUtils
 {
   /// <summary>
   /// Returns a base for native methods with the specified type signature as the return type.
   /// </summary>
   /// <param name="signature">The type signature of the return type.</param>
-  /// <returns></returns>
-  private static Method GetNativeMethodBase(TypeSignature signature)
-    => new Method(Guid.NewGuid().ToString(), 0 /* Set further down */, MethodSignature.CreateStatic(signature))
+  /// <returns>A base for a native method.</returns>
+  private static MethodDefinition GetNativeMethodBase(TypeSignature signature)
+    => new MethodDefinition(Guid.NewGuid().ToString(), 0 /* Set further down */, MethodSignature.CreateStatic(signature))
     {
       Attributes = MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.PInvokeImpl,
       ImplAttributes = MethodImplAttributes.Native | MethodImplAttributes.Unmanaged | MethodImplAttributes.PreserveSig
@@ -30,10 +30,10 @@ internal static class NativeUtils
   /// <param name="str">The raw string.</param>
   /// <param name="libTypeFactory">CorLibTypeFactory for getting a char* type signature.</param>
   /// <returns>The built native method.</returns>
-  public static Method GetNativeStringMethod(string str, CorLibTypeFactory libTypeFactory)
+  public static MethodDefinition GetNativeStringMethod(string str, CorLibTypeFactory libTypeFactory)
   {
     // Get a new method base with a char* as the return type.
-    Method method = GetNativeMethodBase(libTypeFactory.Char.MakePointerType());
+    MethodDefinition method = GetNativeMethodBase(libTypeFactory.Char.MakePointerType());
 
     // Build the native method body using the assembly code for returning the string bytes.
     method.NativeMethodBody = new NativeMethodBody(method)
@@ -54,10 +54,10 @@ internal static class NativeUtils
   /// <param name="num">The number.</param>
   /// <param name="factory">CorLibTypeFactory for getting the correct type signature.</param>
   /// <returns>The built native method.</returns>
-  public static Method GetNativeNumberMethod(object num, CorLibTypeFactory factory)
+  public static MethodDefinition GetNativeNumberMethod(object num, CorLibTypeFactory factory)
   {
     // Create a new method base with the correct type signature.
-    Method method = GetNativeMethodBase(factory.FromName("System", num.GetType().Name)!.MakeGenericInstanceType());
+    MethodDefinition method = GetNativeMethodBase(factory.FromName("System", num.GetType().Name)!.MakeGenericInstanceType());
 
     // Build the native method body using the assembly code for returning the number bytes.
     method.NativeMethodBody = new NativeMethodBody(method)

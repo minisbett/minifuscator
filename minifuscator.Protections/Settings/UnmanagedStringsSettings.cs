@@ -1,9 +1,9 @@
-﻿namespace minifuscator.Models.Settings;
+﻿namespace minifuscator.Protections.Settings;
 
 /// <summary>
 /// Represents the settings for the string obfuscation.
 /// </summary>
-public class StringObfuscationSettings
+public class UnmanagedStringsSettings
 {
   /// <summary>
   /// Bool whether string obfuscation is being executed.

@@ -1,8 +1,10 @@
 ﻿using AsmResolver;
+using AsmResolver.DotNet;
 using AsmResolver.DotNet.Bundles;
-using minifuscator.Models;
-using minifuscator.Obfuscations;
-using minifuscator.Utils;
+using minifuscator.Protections;
+using minifuscator.Shared;
+using minifuscator.Shared.Utils;
+using System.Reflection;
 
 namespace minifuscator;
 
@@ -13,20 +15,12 @@ namespace minifuscator;
 public static class Minifuscator
 {
   /// <summary>
-  /// Bool whether logging should be disabled.
-  /// </summary>
-  public static bool DisableLogging { get; set; } = false;
-
-  /// <summary>
   /// Runs the specified obfuscation job.
   /// </summary>
   public static void Obfuscate(ObfuscationJob job)
   {
-    if (!DisableLogging)
-    {
-      Version version = SRAssembly.GetExecutingAssembly().GetName().Version!;
-      Console.WriteLine($"Minifuscator v{version.Major}.{version.Minor}.{version.Build}");
-    }
+    Version version = Assembly.GetExecutingAssembly().GetName().Version!;
+    Console.WriteLine($"Minifuscator v{version.Major}.{version.Minor}.{version.Build}");
 
     ArgumentNullException.ThrowIfNull(job);
     ArgumentNullException.ThrowIfNull(job.Settings);
@@ -39,25 +33,23 @@ public static class Minifuscator
     Logger.Info("Main", $"IsAppHostBundle: {job.Target.IsAppHostBundle}");
 
     // Get the assembly from the input file.
-    Assembly assembly = GetAssembly(job.Target);
+    AssemblyDefinition assembly = GetAssembly(job.Target);
     Logger.Info("Main", $"Loaded assembly '{assembly.FullName}'.");
 
-    // Create a new instance of all obfuscations, sorted by priority.
-    ObfuscationBase[] obfuscations = typeof(ObfuscationBase).Assembly.GetTypes()
-      .Where(x => typeof(ObfuscationBase).IsAssignableFrom(x) && !x.IsAbstract)
-      .Select(x => (ObfuscationBase)Activator.CreateInstance(x)!)
+    // Create a new instance of all protections, sorted by priority.
+    Protection[] protections = typeof(Protection).Assembly.GetTypes()
+      .Where(x => typeof(Protection).IsAssignableFrom(x) && !x.IsAbstract)
+      .Select(x => (Protection)Activator.CreateInstance(x)!)
       .OrderBy(x => x.Priority)
       .ToArray();
-    Logger.Info("Main", $"Loaded obfuscations: {string.Join(", ", obfuscations.Select(x => x.GetType().Name))}");
+    Logger.Info("Main", $"Loaded protections: {string.Join(", ", protections.Select(x => x.GetType().Name))}");
 
-    // Iterate through all obfuscation, inject the assembly and settings and execute them.
-    foreach (ObfuscationBase obfuscation in obfuscations)
+    // Iterate through all protections, build the context and execute them.
+    foreach (Protection protection in protections)
     {
-      Logger.Info("Main", $"Executing obfuscation '{obfuscation.GetType().Name}'...");
+      Logger.Info("Main", $"Executing obfuscation '{protection.GetType().Name}'...");
 
-      obfuscation.Assembly = assembly;
-      obfuscation.Settings = job.Settings;
-      obfuscation.Execute();
+      protection.Execute(new ProtectionContext(assembly.ManifestModule!, job.Settings));
     }
 
     Logger.Success("Main", "Obfuscation process finished.");
@@ -81,31 +73,31 @@ public static class Minifuscator
   /// Parses the assembly from the input file of the job, potentially parsing an AppHost bundle.
   /// </summary>
   /// <returns>The parsed assembly.</returns>
-  private static Assembly GetAssembly(ObfuscationTarget target)
+  private static AssemblyDefinition GetAssembly(ObfuscationTarget target)
   {
     // Parse the assembly depending on whether the input is an AppHost bundle or not.
     if (target.IsAppHostBundle)
     {
       // Parse the AppHost bundle from the specified input file.
-      Bundle bundle = Bundle.FromFile(target.Input);
+      BundleManifest bundle = BundleManifest.FromFile(target.Input);
       Logger.Info("Parser", $"Loaded AppHost bundle '{bundle.BundleID}'.");
 
       // Identify the main application binary from the bundle and parse the main module of the assembly.
       BundleFile mainAppBinary = bundle.GetFile($"{Path.GetFileNameWithoutExtension(target.Input)}.dll")!;
       Logger.Info("Parser", $"Found main app binary '{mainAppBinary.RelativePath}'.");
-      return Assembly.FromBytes(mainAppBinary.GetData());
+      return AssemblyDefinition.FromBytes(mainAppBinary.GetData());
     }
     else
     {
       // Parse the assembly from the specified input file. The file is read first to prevent file locking.
-      return Assembly.FromBytes(File.ReadAllBytes(target.Input));
+      return AssemblyDefinition.FromBytes(File.ReadAllBytes(target.Input));
     }
   }
 
   /// <summary>
   /// Writes the specified assembly into the output.
   /// </summary>
-  private static void Write(ObfuscationTarget target, Assembly assembly)
+  private static void Write(ObfuscationTarget target, AssemblyDefinition assembly)
   {
     // Write the assembly to either the output file or a temporary file if the target is an AppHost bundle.
     string file = target.IsAppHostBundle ? Path.GetTempFileName() : target.Output;
@@ -116,7 +108,7 @@ public static class Minifuscator
     if (target.IsAppHostBundle)
     {
       // Parse the AppHost bundle from the specified input file.
-      Bundle bundle = Bundle.FromFile(target.Input);
+      BundleManifest bundle = BundleManifest.FromFile(target.Input);
       Logger.Info("Writer", $"Loaded AppHost bundle '{bundle.BundleID}'.");
 
       // Identify the main application binary from the bundle and write the assembly back into it.

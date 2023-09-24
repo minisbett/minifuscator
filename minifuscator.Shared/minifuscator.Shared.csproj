@@ -4,17 +4,11 @@
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyVersion></AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="AsmResolver" Version="5.4.0" />
     <PackageReference Include="AsmResolver.DotNet" Version="5.4.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\minifuscator.Protections\minifuscator.Protections.csproj" />
-    <ProjectReference Include="..\minifuscator.Shared\minifuscator.Shared.csproj" />
   </ItemGroup>
 
 </Project>

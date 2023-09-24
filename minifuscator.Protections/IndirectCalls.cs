@@ -2,50 +2,51 @@
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures.Types;
 using AsmResolver.PE.DotNet.Cil;
-using minifuscator.Utils;
+using minifuscator.Shared;
+using minifuscator.Shared.Utils;
 using System.Reflection;
 
-namespace minifuscator.Obfuscations;
+namespace minifuscator.Protections;
 
 /// <summary>
 /// Applies obfuscation of all kinds of method calls to the assembly.
 /// </summary>
-internal class IndirectCalls : ObfuscationBase
+public class IndirectCalls : Protection
 {
   public override int Priority => 2;
 
-  public override void Execute()
+  public override void Execute(ProtectionContext context)
   {
     return;
     // Import the RuntimeMethodHandle type to create local variables of thatr type.
-    TypeSignature runtimeMethodHandle = Module.Import(typeof(RuntimeMethodHandle)).ToTypeSignature(isValueType: true);
+    TypeSignature runtimeMethodHandle = context.Module.Import(typeof(RuntimeMethodHandle)).ToTypeSignature(isValueType: true);
 
     // Import Type.GetTypeFromHandle(RuntimeTypeHandle) to get the <Module> type at runtime.
     // Calling this method on the <Module> handle is the equivalent of typeof(<Module>).
-    IMethodDescriptor getTypeFromHandle = Module.Import(
-      typeof(SType).GetMethod(nameof(System.Type.GetTypeFromHandle),
-      new SType[] { typeof(RuntimeTypeHandle) })!);
+    IMethodDescriptor getTypeFromHandle = context.Module.Import(
+      typeof(Type).GetMethod(nameof(System.Type.GetTypeFromHandle),
+      new Type[] { typeof(RuntimeTypeHandle) })!);
 
     // Import the getter of Type::Module to get the module of a type.
-    IMethodDescriptor getModule = Module.Import(
-      typeof(SType).GetProperty(nameof(Type.Module))!.GetMethod!);
+    IMethodDescriptor getModule = context.Module.Import(
+      typeof(Type).GetProperty(nameof(Type.Module))!.GetMethod!);
 
     // Import Module::ResolveMethod(int) to get a method inside the module by it's metadata token.
-    IMethodDescriptor resolveMethod = Module.Import(
-      typeof(System.Reflection.Module).GetMethod(nameof(SRModule.ResolveMethod),
-      new SType[] { typeof(int) })!);
+    IMethodDescriptor resolveMethod = context.Module.Import(
+      typeof(Module).GetMethod(nameof(Module.ResolveMethod),
+      new Type[] { typeof(int) })!);
 
     // Import MethodBase::MethodHandle to get the handle of a method.
-    IMethodDescriptor getMethodHandle = Module.Import(
+    IMethodDescriptor getMethodHandle = context.Module.Import(
       typeof(MethodBase).GetProperty(nameof(MethodBase.MethodHandle))!.GetMethod!);
 
     // Import RuntimeMethodHandle::GetFunctionPointer to get the function pointer of a method.
-    IMethodDescriptor getFunctionPointer = Module.Import(
+    IMethodDescriptor getFunctionPointer = context.Module.Import(
       typeof(RuntimeMethodHandle).GetMethod(nameof(RuntimeMethodHandle.GetFunctionPointer))!);
 
     // Go through all methods and replace all Call instructions with indirect calls. (Calli)
-    foreach (MethodDefinition method in Module.GetAllTypes().Where(x => !x.IsModuleType).GetAllMethods()
-      .Where(x => x == Module.ManagedEntryPoint && x.CilMethodBody is not null && x.DeclaringType?.IsModuleType == false))
+    foreach (MethodDefinition method in context.Module.GetAllTypes().Where(x => !x.IsModuleType).GetAllMethods()
+      .Where(x => x.IsEntryPoint() && x.HasMethodBody))
     {
       CilInstructionCollection instructions = method.CilMethodBody!.Instructions!;
 
@@ -76,7 +77,7 @@ internal class IndirectCalls : ObfuscationBase
         }
 
         // Lookup the target method in the module by its metadata token and check whether it was found.
-        if (!Module.TryLookupMember(target.MetadataToken, out IMetadataMember? targetMetadata) || targetMetadata is null)
+        if (!context.Module.TryLookupMember(target.MetadataToken, out IMetadataMember? targetMetadata) || targetMetadata is null)
           continue;
 
         // Add a local variable of type RuntimeMethodHandle to store the method handle in.
@@ -92,7 +93,7 @@ internal class IndirectCalls : ObfuscationBase
         //
         // typeof(<Module>).Module.ResolveMethod(MetadataToken).MethodHandle.GetFunctionPointer()
         //
-        instruction.ReplaceWith(CilOpCodes.Ldtoken, Module.GetOrCreateModuleType());
+        instruction.ReplaceWith(CilOpCodes.Ldtoken, context.Module.GetOrCreateModuleType());
         method.CilMethodBody!.Instructions.InsertRange(i + 1, new CilInstruction[]
         {
             new(CilOpCodes.Call, getTypeFromHandle),

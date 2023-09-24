@@ -3,19 +3,19 @@ using AsmResolver.DotNet.Bundles;
 using AsmResolver.PE.DotNet.Cil;
 using System.Reflection;
 
-namespace minifuscator.Utils;
+namespace minifuscator.Shared.Utils;
 
 /// <summary>
 /// Provides utility methods for the AsmResolver library.
 /// </summary>
-internal static class AsmResolverUtils
+public static class AsmResolverUtils
 {
   /// <summary>
   /// Returns all methods of all types.
   /// </summary>
   /// <param name="types">The enumerable of types.</param>
   /// <returns>An enumerable with all methods of the targetted types.</returns>
-  public static IEnumerable<Method> GetAllMethods(this IEnumerable<Type> types)
+  public static IEnumerable<MethodDefinition> GetAllMethods(this IEnumerable<TypeDefinition> types)
   {
     return types.SelectMany(x => x.Methods);
   }
@@ -25,7 +25,7 @@ internal static class AsmResolverUtils
   /// </summary>
   /// <param name="methods">The enumerable of methods.</param>
   /// <returns>An enumerable with all parameters of the targetted methods.</returns>
-  public static IEnumerable<Parameter> GetAllParameters(this IEnumerable<Method> methods)
+  public static IEnumerable<ParameterDefinition> GetAllParameters(this IEnumerable<MethodDefinition> methods)
   {
     return methods.SelectMany(x => x.ParameterDefinitions);
   }
@@ -35,7 +35,7 @@ internal static class AsmResolverUtils
   /// </summary>
   /// <param name="types">The enumerable of types.</param>
   /// <returns>An enumerable with all properties of the targetted types.</returns>
-  public static IEnumerable<Property> GetAllProperties(this IEnumerable<Type> types)
+  public static IEnumerable<PropertyDefinition> GetAllProperties(this IEnumerable<TypeDefinition> types)
   {
     return types.SelectMany(x => x.Properties).ToArray();
   }
@@ -45,7 +45,7 @@ internal static class AsmResolverUtils
   /// </summary>
   /// <param name="types">The enumerable of types.</param>
   /// <returns>An enumerable with all fields of the targetted types.</returns>
-  public static IEnumerable<Field> GetAllFields(this IEnumerable<Type> types)
+  public static IEnumerable<FieldDefinition> GetAllFields(this IEnumerable<TypeDefinition> types)
   {
     return types.SelectMany(x => x.Fields).ToArray();
   }
@@ -55,7 +55,7 @@ internal static class AsmResolverUtils
   /// </summary>
   /// <param name="types">The enumerable of types.</param>
   /// <returns>An enumerable with all events of the targetted types.</returns>
-  public static IEnumerable<Event> GetAllEvents(this IEnumerable<Type> types)
+  public static IEnumerable<EventDefinition> GetAllEvents(this IEnumerable<TypeDefinition> types)
   {
     return types.SelectMany(x => x.Events).ToArray();
   }
@@ -140,7 +140,7 @@ internal static class AsmResolverUtils
   /// <param name="module">The module to import the type into.</param>
   /// <param name="type">The type to be imported into the module.</param>
   /// <returns>The imported type.</returns>
-  public static ITypeDefOrRef Import(this Module module, System.Type type)
+  public static ITypeDefOrRef Import(this ModuleDefinition module, Type type)
   {
     // Create a new reference importer, import the type and return it.
     ReferenceImporter importer = new ReferenceImporter(module);
@@ -153,10 +153,20 @@ internal static class AsmResolverUtils
   /// <param name="module">The module to import the method into.</param>
   /// <param name="method">The method to be imported into the module.</param>
   /// <returns>The imported method.</returns>
-  public static IMethodDescriptor Import(this Module module, MethodBase method)
+  public static IMethodDescriptor Import(this ModuleDefinition module, MethodBase method)
   {
     // Create a new reference importer, import the method and return it.
     ReferenceImporter importer = new ReferenceImporter(module);
     return importer.ImportMethod(method);
+  }
+
+  /// <summary>
+  /// Returns whether the method is the entry point of it's module.
+  /// </summary>
+  /// <param name="method">The method.</param>
+  /// <returns>Bool whether the method is the entry point of it's method.</returns>
+  public static bool IsEntryPoint(this MethodDefinition method)
+  {
+    return method == method.Module?.ManagedEntryPoint;
   }
 }

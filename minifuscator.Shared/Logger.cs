@@ -1,9 +1,9 @@
-﻿namespace minifuscator;
+﻿namespace minifuscator.Shared;
 
 /// <summary>
 /// Provides logging methods for the console.
 /// </summary>
-internal static class Logger
+public static class Logger
 {
   /// <summary>
   /// Outputs a success message.
@@ -49,10 +49,6 @@ internal static class Logger
   /// <param name="severityColor">The color of the severity.</param>
   private static void WriteLine(string source, string severity, ConsoleColor severityColor, string msg)
   {
-    // If logging is disabled, return.
-    if (Minifuscator.DisableLogging)
-      return;
-
     // Write the source to the console.
     Console.Write($"[{source}/");
 
