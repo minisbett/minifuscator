@@ -7,7 +7,7 @@ An open-source .NET obfuscation tool, fully documented and comprehensible.
 **No 1:1 stolen code** (*unlike 99.9% of all .NET obfuscation repositories on GitHub*)</br>
 For more info, refer to the [credits section](#credits) of this README.
 
-[Features](#features) • [To-Do](#todo) • [How to use reflection](#how-to-handle-reflection-with-name-obfuscation)</br>
+[Features](#features) • [To-Do](#todo) • [How does it work?](#how-does-minifuscator-work)</br>
 [Credits](#credits) • [Licenses](#licenses)
 </div>
 
@@ -15,9 +15,21 @@ For more info, refer to the [credits section](#credits) of this README.
 <i>Made with ❤️ by minisbett</i>
 </div>
 
+# How does minifuscator work?
+
+```cs
+throw new NotImplementedException();
+```
+
+# How effective are .NET obfuscations tools?
+
+The concept that such obfuscators are based on is called **security by obscurity**. It relies on the idea that attack vectors are secret or hidden. It works great as an extra security layer that works well with other security methods. It reduces the chances of a violant act against the application to be successful. Since .NET/MSIL/C# is managed by a runtime and contains lots of info even when compiled through the C# compiler, obfuscation of .NET assemblies is not necessarily always effective, especially not as a stand-alone solution for securing the application.
+
+It definitely does it's job of, depending on the complexity of obfuscation, making it hard for people to understand what is going on. This can range from newbies or less tech-saavy people trying to tamper with your code or understand some functionality to complex obfuscations, like control flow obfuscation. Ultimately, the goal of a .NET obfuscation tool is to make the managed code as unreadable/reverse-engineerable and cryptic/obscure as possible, while looking to maintain a degree of stability and performance. Depending on the target application it is not always recommended or simply does not work to just throw all obfuscations/obfuscators you can find on it.
+
 # Features
 
-**Names** - Replaces all namespace, type, method, parameter, property, field and event names with random strings. Names are kept consistently random, meaning types share the same namespaces and overriden definitions have the same name as the original one. This is desired because 1. The application may rely on reflection (see [how to handle reflection](#how-to-handle-reflection)) and 2. The JIT compiler will fail to find an overriden definition.
+**Renamer** - Replaces all namespace, type, method, parameter, property, field and event names with random strings. Names are kept consistently random, meaning types share the same namespaces and overriden definitions have the same name as the original one. This is desired because 1. The application may rely on reflection (see [how to handle reflection](#how-to-handle-reflection)) and 2. The JIT compiler will fail to find an overriden definition.
 
 **UnamangedStrings**/**UnmanagedNumbers** - Replaces all string/number constants (Ldstr, Ldc_I4/8, Ldc_R4/8) with calls to unmanaged functions. They are still *somewhere* inside the PE file, although no longer easily readable using a decompiler like dnSpy.
 
@@ -28,6 +40,7 @@ For more info, refer to the [credits section](#credits) of this README.
 # ToDo
 
 ```
+[ ] Replace the injected Assembly and Settings instances with a Context class passed to the execute method
 [ ] Get rid of parsing PE files as assemblies, instead parsing them directly as modules (ManifestModule)
 [ ] Fix CallToCalli (from BitMono), which is flawed and does not work well (potentially because BitMono targets Mono?)
 [ ] Refactor handling of settings to be more modular
@@ -36,10 +49,10 @@ For more info, refer to the [credits section](#credits) of this README.
 [ ] Implement some entry point obfuscation via TLS callbacks/DllMain/COR20 entry points
 ```
 
-# How to handle reflection with name obfuscation
+# How to handle reflection with renamer protection
 
 A lot of applications utilize the `System.Reflection` namespace, for example to dynamically process classes as modules. In these scenarios, they rely on specifying a namespace, a method or any other definition for performing the lookup.
-If the **Names** obfuscation is applied on the assembly, it effectively breaks those lookups **in case you are specifying those definitions via a string**.
+If the **Renamer** protection is applied on the assembly, it effectively breaks those lookups **in case you are specifying those definitions via a string**.
 
 There are better ways to do it, providing more resilience and eliminating that problem. Here are some examples:
 ```cs
