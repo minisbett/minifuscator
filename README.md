@@ -40,8 +40,6 @@ It definitely does it's job of, depending on the complexity of obfuscation, maki
 # ToDo
 
 ```
-[ ] Replace the injected Assembly and Settings instances with a Context class passed to the execute method
-[ ] Get rid of parsing PE files as assemblies, instead parsing them directly as modules (ManifestModule)
 [ ] Fix CallToCalli (from BitMono), which is flawed and does not work well (potentially because BitMono targets Mono?)
 [ ] Refactor handling of settings to be more modular
     [ ] Find a solution for preventing the Enabled checks at the start of each obfuscation
